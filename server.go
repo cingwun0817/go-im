@@ -3,16 +3,27 @@ package main
 import (
 	"fmt"
 	"net"
+	"sync"
 )
 
 type Server struct {
 	Ip   string
 	Port int
+
+	OnlineMap map[string]*User
+	mapLock   sync.RWMutex
+
+	Message chan string
 }
 
 // create server
 func NewServer(ip string, port int) *Server {
-	server := &Server{Ip: ip, Port: port}
+	server := &Server{
+		Ip:        ip,
+		Port:      port,
+		OnlineMap: make(map[string]*User),
+		Message:   make(chan string),
+	}
 
 	return server
 }
@@ -27,6 +38,9 @@ func (s *Server) Start() {
 	}
 	// close listen socket
 	defer listener.Close()
+
+	// listen message channel
+	go s.ListenMessage()
 
 	for {
 		// accept
@@ -44,5 +58,39 @@ func (s *Server) Start() {
 
 // handler
 func (s *Server) Handler(conn net.Conn) {
-	fmt.Println("Connect success")
+	fmt.Printf("Connect success: %s %s\n", conn.RemoteAddr().String(), conn.RemoteAddr().Network())
+
+	user := NewUser(conn)
+
+	// user online, add to OnlineMap
+	s.mapLock.Lock()
+	s.OnlineMap[user.Name] = user
+	s.mapLock.Unlock()
+
+	// broad user online message
+	s.BroadCast(user, "上線了!!!")
+
+	// block forever
+	select {}
+}
+
+// broad cast msg
+func (s *Server) BroadCast(user *User, msg string) {
+	sendMsg := fmt.Sprintf("[%s] %s: %s", user.Addr, user.Name, msg)
+
+	s.Message <- sendMsg
+}
+
+// listen message
+func (s *Server) ListenMessage() {
+	for {
+		msg := <-s.Message
+
+		// to online users
+		s.mapLock.Lock()
+		for _, user := range s.OnlineMap {
+			user.C <- msg
+		}
+		s.mapLock.Unlock()
+	}
 }
