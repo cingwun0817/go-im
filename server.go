@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"runtime"
 	"sync"
+	"time"
 )
 
 type Server struct {
@@ -65,6 +67,9 @@ func (s *Server) Handler(conn net.Conn) {
 
 	user.Online()
 
+	// listen user is live
+	isLive := make(chan bool)
+
 	// receive user message
 	go func() {
 		buffer := make([]byte, 1024)
@@ -87,11 +92,26 @@ func (s *Server) Handler(conn net.Conn) {
 
 			// broad cast msg
 			user.DoMessage(msg)
+
+			// user lived
+			isLive <- true
 		}
 	}()
 
 	// block forever
-	select {}
+	for {
+		select {
+		case <-isLive: // activation time.After()
+		case <-time.After(time.Second * 10): // timeout
+			user.SendMsg(fmt.Sprintf("[Server] your timeout, cancel connection"))
+
+			close(user.C)
+
+			conn.Close()
+
+			runtime.Goexit()
+		}
+	}
 }
 
 // broad cast msg

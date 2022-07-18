@@ -69,7 +69,7 @@ func (u *User) DoMessage(msg string) {
 		u.server.mapLock.Lock()
 		for _, user := range u.server.OnlineMap {
 			onlineMsg := fmt.Sprintf("[Server] %s 在線上 ...", user.Name)
-			u.sendMsg(onlineMsg)
+			u.SendMsg(onlineMsg)
 		}
 		u.server.mapLock.Unlock()
 	} else if strings.Contains(msg, "rename") && msg[:6] == "rename" { // rename:xxx
@@ -78,7 +78,7 @@ func (u *User) DoMessage(msg string) {
 		// check name is exist
 		_, ok := u.server.OnlineMap[newName]
 		if ok {
-			u.sendMsg(fmt.Sprintf("The %s has been used", newName))
+			u.SendMsg(fmt.Sprintf("The %s has been used", newName))
 		} else {
 			u.server.mapLock.Lock()
 			delete(u.server.OnlineMap, u.Name)
@@ -86,7 +86,7 @@ func (u *User) DoMessage(msg string) {
 			u.server.mapLock.Unlock()
 
 			u.Name = newName
-			u.sendMsg("Rename success")
+			u.SendMsg("Rename success")
 		}
 	} else {
 		u.server.BroadCast(u, msg)
@@ -94,6 +94,6 @@ func (u *User) DoMessage(msg string) {
 }
 
 // send message to now user
-func (u *User) sendMsg(msg string) {
+func (u *User) SendMsg(msg string) {
 	u.conn.Write([]byte(msg + "\n"))
 }
