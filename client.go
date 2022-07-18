@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"net"
+	"os"
 )
 
 type Client struct {
@@ -11,12 +13,14 @@ type Client struct {
 	ServerPort int
 	Name       string
 	conn       net.Conn
+	flag       int
 }
 
 func NewClient(serverIp string, serverPort int) *Client {
 	client := &Client{
 		ServerIp:   serverIp,
 		ServerPort: serverPort,
+		flag:       999,
 	}
 
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", serverIp, serverPort))
@@ -28,6 +32,71 @@ func NewClient(serverIp string, serverPort int) *Client {
 	client.conn = conn
 
 	return client
+}
+
+func (c *Client) menu() bool {
+	var flag int
+
+	fmt.Println("1. Public Mode")
+	fmt.Println("2. Private Mode")
+	fmt.Println("3. Rename")
+	fmt.Println("0. Quit")
+
+	fmt.Scanln(&flag)
+
+	if flag >= 0 && flag <= 3 {
+		c.flag = flag
+
+		return true
+	} else {
+		fmt.Println(">>>> Please input 0-3 menu numbers")
+		return false
+	}
+}
+
+func (c *Client) Run() {
+	for c.flag != 0 {
+		for c.menu() != true {
+
+		}
+
+		switch c.flag {
+		case 1:
+			fmt.Println("Choose Public Mode")
+
+			break
+		case 2:
+			fmt.Println("Choose Private Mode")
+
+			break
+		case 3:
+			// fmt.Println("Choose Rename Mode")
+
+			c.Rename()
+
+			break
+		}
+	}
+}
+
+func (c *Client) Rename() bool {
+	fmt.Println(">>>>> Input new name")
+
+	fmt.Scanln(&c.Name)
+
+	sendMsg := "rename:" + c.Name + "\n"
+
+	_, err := c.conn.Write([]byte(sendMsg))
+	if err != nil {
+		fmt.Println("conn.Write err:", err)
+		return false
+	}
+
+	return true
+}
+
+func (c *Client) DealResponse() {
+	io.Copy(os.Stdout, c.conn)
 }
 
 var serverIp string
@@ -49,6 +118,11 @@ func main() {
 
 	fmt.Printf(">>>>> %s %d, client connection success ...\n", serverIp, serverPort)
 
-	// block forever
-	select {}
+	// response server message to stdout
+	go client.DealResponse()
+
+	client.Run()
+
+	// // block forever
+	// select {}
 }

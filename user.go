@@ -86,7 +86,7 @@ func (u *User) DoMessage(msg string) {
 			u.server.mapLock.Unlock()
 
 			u.Name = newName
-			u.SendMsg("Rename success")
+			u.SendMsg(fmt.Sprintf("Rename success, new name: %s", u.Name))
 		}
 	} else if strings.Contains(msg, "to") && msg[:2] == "to" { // to:xxx:msg
 		toName := strings.Split(msg, ":")[1]
