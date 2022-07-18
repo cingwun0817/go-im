@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 )
 
@@ -63,5 +64,19 @@ func (u *User) Offline() {
 
 // user send message
 func (u *User) DoMessage(msg string) {
-	u.server.BroadCast(u, msg)
+	if msg == "who" { // list online users
+		u.server.mapLock.Lock()
+		for _, user := range u.server.OnlineMap {
+			onlineMsg := fmt.Sprintf("[Server] %s 在線上 ...", user.Name)
+			u.sendMsg(onlineMsg)
+		}
+		u.server.mapLock.Unlock()
+	} else {
+		u.server.BroadCast(u, msg)
+	}
+}
+
+// send message to now user
+func (u *User) sendMsg(msg string) {
+	u.conn.Write([]byte(msg + "\n"))
 }
