@@ -88,6 +88,26 @@ func (u *User) DoMessage(msg string) {
 			u.Name = newName
 			u.SendMsg("Rename success")
 		}
+	} else if strings.Contains(msg, "to") && msg[:2] == "to" { // to:xxx:msg
+		toName := strings.Split(msg, ":")[1]
+		if toName == "" {
+			u.SendMsg("To format is failed, please use to:<NAME>:<MSG>")
+			return
+		}
+
+		toUser, ok := u.server.OnlineMap[toName]
+		if !ok {
+			u.SendMsg("Not found user")
+			return
+		}
+
+		content := strings.Split(msg, ":")[2]
+		if content == "" {
+			u.SendMsg("Message is empty")
+			return
+		}
+
+		toUser.SendMsg(fmt.Sprintf("[Private] %s send: %s", u.Name, content))
 	} else {
 		u.server.BroadCast(u, msg)
 	}

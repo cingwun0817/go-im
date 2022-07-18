@@ -102,7 +102,7 @@ func (s *Server) Handler(conn net.Conn) {
 	for {
 		select {
 		case <-isLive: // activation time.After()
-		case <-time.After(time.Second * 10): // timeout
+		case <-time.After(time.Second * 300): // timeout
 			user.SendMsg(fmt.Sprintf("[Server] your timeout, cancel connection"))
 
 			close(user.C)
