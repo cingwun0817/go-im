@@ -61,15 +61,9 @@ func (s *Server) Start() {
 func (s *Server) Handler(conn net.Conn) {
 	fmt.Printf("Connect success: %s %s\n", conn.RemoteAddr().String(), conn.RemoteAddr().Network())
 
-	user := NewUser(conn)
+	user := NewUser(conn, s)
 
-	// user online, add to OnlineMap
-	s.mapLock.Lock()
-	s.OnlineMap[user.Name] = user
-	s.mapLock.Unlock()
-
-	// broad user online message
-	s.BroadCast(user, "上線了!!!")
+	user.Online()
 
 	// receive user message
 	go func() {
@@ -79,7 +73,7 @@ func (s *Server) Handler(conn net.Conn) {
 			n, err := conn.Read(buffer)
 
 			if n == 0 {
-				s.BroadCast(user, "下線了QQQ")
+				user.Offline()
 				return
 			}
 
@@ -92,7 +86,7 @@ func (s *Server) Handler(conn net.Conn) {
 			msg := string(buffer[0 : n-1])
 
 			// broad cast msg
-			s.BroadCast(user, msg)
+			user.DoMessage(msg)
 		}
 	}()
 
