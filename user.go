@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"strings"
 )
 
 type User struct {
@@ -71,6 +72,22 @@ func (u *User) DoMessage(msg string) {
 			u.sendMsg(onlineMsg)
 		}
 		u.server.mapLock.Unlock()
+	} else if strings.Contains(msg, "rename") && msg[:6] == "rename" { // rename:xxx
+		newName := msg[7:]
+
+		// check name is exist
+		_, ok := u.server.OnlineMap[newName]
+		if ok {
+			u.sendMsg(fmt.Sprintf("The %s has been used", newName))
+		} else {
+			u.server.mapLock.Lock()
+			delete(u.server.OnlineMap, u.Name)
+			u.server.OnlineMap[newName] = u
+			u.server.mapLock.Unlock()
+
+			u.Name = newName
+			u.sendMsg("Rename success")
+		}
 	} else {
 		u.server.BroadCast(u, msg)
 	}

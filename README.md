@@ -18,3 +18,8 @@ https://www.bilibili.com/video/BV1gf4y1r79E?p=37&vd_source=d0325000d55520d72e66f
 go build -o server main.go server.go user.go
 ./server
 ```
+
+## Keyword
+
+who: 列出上線清單
+rename:<NAME>: 更改用戶名稱 
