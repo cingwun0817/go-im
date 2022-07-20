@@ -67,7 +67,8 @@ func (c *Client) Run() {
 
 			break
 		case 2:
-			fmt.Println("Choose Private Mode")
+			// fmt.Println("Choose Private Mode")
+			c.PrivateChat()
 
 			break
 		case 3:
@@ -115,6 +116,48 @@ func (c *Client) PublicChat() {
 		chatMsg = ""
 		fmt.Println(">>>>> Input message in public chat (input `exit` string is exit)")
 		fmt.Scanln(&chatMsg)
+	}
+}
+
+func (c *Client) SelectUsers() {
+	_, err := c.conn.Write([]byte("who\n"))
+	if err != nil {
+		fmt.Println("conn.Write err:", err)
+		return
+	}
+}
+
+func (c *Client) PrivateChat() {
+	c.SelectUsers()
+
+	var toName string
+	var toMessage string
+	fmt.Println(">>>>> Select input one user name (input `exit` string is exit)")
+	fmt.Scanln(&toName)
+
+	for toName != "exit" {
+		if len(toName) != 0 {
+			fmt.Println(">>>>> Input message (input `exit` string is exit)")
+			fmt.Scanln(&toMessage)
+
+			for toMessage != "exit" {
+				if len(toMessage) != 0 {
+					_, err := c.conn.Write([]byte(fmt.Sprintf("to:%s:%s\n", toName, toMessage)))
+					if err != nil {
+						fmt.Println("conn.Write err:", err)
+						break
+					}
+				}
+
+				toMessage = ""
+				fmt.Println(">>>>> Input message (input `exit` string is exit)")
+				fmt.Scanln(&toMessage)
+			}
+
+			c.SelectUsers()
+			fmt.Println(">>>>> Select input one user name (input `exit` string is exit)")
+			fmt.Scanln(&toName)
+		}
 	}
 }
 
