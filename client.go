@@ -62,7 +62,8 @@ func (c *Client) Run() {
 
 		switch c.flag {
 		case 1:
-			fmt.Println("Choose Public Mode")
+			// fmt.Println("Choose Public Mode")
+			c.PublicChat()
 
 			break
 		case 2:
@@ -71,7 +72,6 @@ func (c *Client) Run() {
 			break
 		case 3:
 			// fmt.Println("Choose Rename Mode")
-
 			c.Rename()
 
 			break
@@ -79,6 +79,7 @@ func (c *Client) Run() {
 	}
 }
 
+// rename
 func (c *Client) Rename() bool {
 	fmt.Println(">>>>> Input new name")
 
@@ -93,6 +94,28 @@ func (c *Client) Rename() bool {
 	}
 
 	return true
+}
+
+// public chat
+func (c *Client) PublicChat() {
+	var chatMsg string
+
+	fmt.Println(">>>>> Input message in public chat (input `exit` string is exit)")
+	fmt.Scanln(&chatMsg)
+
+	for chatMsg != "exit" {
+		if len(chatMsg) != 0 {
+			_, err := c.conn.Write([]byte(chatMsg + "\n"))
+			if err != nil {
+				fmt.Println("conn.Write err:", err)
+				break
+			}
+		}
+
+		chatMsg = ""
+		fmt.Println(">>>>> Input message in public chat (input `exit` string is exit)")
+		fmt.Scanln(&chatMsg)
+	}
 }
 
 func (c *Client) DealResponse() {
